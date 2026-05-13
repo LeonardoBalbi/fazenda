@@ -37,4 +37,9 @@ class Organizadores extends Model
     {
         return $this->hasMany(PasseiosTuristicos::class, 'organizador_id');
     }
+
+    public function users()
+    {
+        return $this->hasMany(User::class, 'organizador_id');
+    }
 }

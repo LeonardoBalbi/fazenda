@@ -9,6 +9,7 @@ use Filament\Forms\Form;
 use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
+use Illuminate\Database\Eloquent\Builder;
 
 class UserResource extends Resource
 {
@@ -73,6 +74,13 @@ class UserResource extends Resource
                             ->required(fn (string $context): bool => $context === 'create')
                             ->dehydrated(fn (?string $state): bool => filled($state))
                             ->maxLength(255),
+                        Forms\Components\Select::make('organizador_id')
+                            ->label('Organizador')
+                            ->relationship('organizador', 'razao_social_nome')
+                            ->searchable()
+                            ->preload()
+                            ->nullable()
+                            ->helperText('Opcional: associa este utilizador a um organizador.'),
                     ]),
                 Forms\Components\Section::make('Funções (Spatie)')
                     ->description('Papéis que controlam o acesso ao painel e às futuras permissões.')
@@ -99,6 +107,10 @@ class UserResource extends Resource
                 Tables\Columns\TextColumn::make('email')
                     ->label('E-mail')
                     ->searchable(),
+                Tables\Columns\TextColumn::make('organizador.razao_social_nome')
+                    ->label('Organizador')
+                    ->searchable()
+                    ->placeholder('—'),
                 Tables\Columns\TextColumn::make('roles.name')
                     ->label('Papéis')
                     ->badge()
@@ -128,5 +140,10 @@ class UserResource extends Resource
             'create' => Pages\CreateUser::route('/create'),
             'edit' => Pages\EditUser::route('/{record}/edit'),
         ];
+    }
+
+    public static function getEloquentQuery(): Builder
+    {
+        return parent::getEloquentQuery()->with(['organizador', 'roles']);
     }
 }

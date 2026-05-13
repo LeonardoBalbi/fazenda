@@ -2,17 +2,19 @@
 
 namespace Database\Seeders;
 
+use App\Models\User;
 use Illuminate\Database\Seeder;
-use Spatie\Permission\Models\Role;
-use Spatie\Permission\Models\Permission;
 use Illuminate\Support\Facades\Log;
+use Spatie\Permission\Models\Permission;
+use Spatie\Permission\Models\Role;
+use Spatie\Permission\PermissionRegistrar;
 
 class RolesAndPermissionsSeeder extends Seeder
 {
     public function run()
     {
         // Resetar permissões em cache
-        app()[\Spatie\Permission\PermissionRegistrar::class]->forgetCachedPermissions();
+        app()[PermissionRegistrar::class]->forgetCachedPermissions();
 
         // Coleção de modelos para os quais vamos criar permissões
         $collection = collect([
@@ -22,26 +24,26 @@ class RolesAndPermissionsSeeder extends Seeder
             'Organizadores',
             'Usuarios',
             'IngressoServico',   // Modelo IngressoServico
-            'IngressoEspecial' ,
+            'IngressoEspecial',
             'Categoria',  // Novo modelo IngressoEspecial adicionado
-            'Ambulante' , // Novo modelo IngressoEspecial adicionado
-            'Local'  // Novo modelo IngressoEspecial adicionado
+            'Ambulante', // Novo modelo IngressoEspecial adicionado
+            'Local',  // Novo modelo IngressoEspecial adicionado
         ]);
 
         // Criar permissões para cada item da coleção
         $collection->each(function ($item) {
             // Criar permissões para visualização, criação, atualização, exclusão
             $permissions = [
-                'viewAny' . $item,  // Visualizar lista
-                'view' . $item,     // Visualizar item específico
-                'create' . $item,   // Criar novo item
-                'update' . $item,   // Editar item
-                'delete' . $item,   // Deletar item
+                'viewAny'.$item,  // Visualizar lista
+                'view'.$item,     // Visualizar item específico
+                'create'.$item,   // Criar novo item
+                'update'.$item,   // Editar item
+                'delete'.$item,   // Deletar item
             ];
 
             // Verificar se a permissão já existe antes de criá-la
             foreach ($permissions as $permissionName) {
-                if (!Permission::where('name', $permissionName)->exists()) {
+                if (! Permission::where('name', $permissionName)->exists()) {
                     Permission::create(['group' => $item, 'name' => $permissionName]);
                 }
             }
@@ -61,35 +63,30 @@ class RolesAndPermissionsSeeder extends Seeder
         ])->get();
         $limitedViewRole->syncPermissions($limitedPermissions);
 
-
-
-        $LocalViewRole  = Role::firstOrCreate(['name' => 'Ambulante']);
+        $LocalViewRole = Role::firstOrCreate(['name' => 'Ambulante']);
         $LocalPermissions = Permission::whereIn('name', [
             'viewAnyLocal', 'viewLocal',
             'viewAnyCategoria', 'viewCategoria',
             'viewAnyAmbulante', 'viewAmbulante',
-                            // Nova permissão de visualização para IngressoEspecial
+            // Nova permissão de visualização para IngressoEspecial
         ])->get();
-        $LocalViewRole ->syncPermissions($LocalPermissions);
+        $LocalViewRole->syncPermissions($LocalPermissions);
 
-
-        $LocalViewRole  = Role::firstOrCreate(['name' => 'admin_Ambulante']);
+        $LocalViewRole = Role::firstOrCreate(['name' => 'admin_Ambulante']);
         $LocalPermissions = Permission::whereIn('name', [
-           'viewAnyLocal', 'viewLocal',
-'createLocal', 'updateLocal', 'deleteLocal',
+            'viewAnyLocal', 'viewLocal',
+            'createLocal', 'updateLocal', 'deleteLocal',
 
-// Novas permissões para o modelo Categoria
-'viewAnyCategoria', 'viewCategoria',
-'createCategoria', 'updateCategoria', 'deleteCategoria',
+            // Novas permissões para o modelo Categoria
+            'viewAnyCategoria', 'viewCategoria',
+            'createCategoria', 'updateCategoria', 'deleteCategoria',
 
-// Novas permissões para o modelo Ambulante
-'viewAnyAmbulante', 'viewAmbulante',
-'createAmbulante', 'updateAmbulante', 'deleteAmbulante',
-                            // Nova permissão de visualização para IngressoEspecial
+            // Novas permissões para o modelo Ambulante
+            'viewAnyAmbulante', 'viewAmbulante',
+            'createAmbulante', 'updateAmbulante', 'deleteAmbulante',
+            // Nova permissão de visualização para IngressoEspecial
         ])->get();
-        $LocalViewRole ->syncPermissions($LocalPermissions);
-
-        
+        $LocalViewRole->syncPermissions($LocalPermissions);
 
         // Criar a função admin com permissões completas
         $adminRole = Role::firstOrCreate(['name' => 'admin']);
@@ -117,21 +114,21 @@ class RolesAndPermissionsSeeder extends Seeder
         $adminRole->syncPermissions($adminPermissions);
 
         // Atribuir role de super-admin a um usuário específico
-        $user = \App\Models\User::where('email', 'leonardocbalb@gmail.com')->first();
+        $user = User::where('email', 'leonardocbalb@gmail.com')->first();
         if ($user) {
             $user->assignRole('super-admin');
         } else {
             // Log para caso o usuário não seja encontrado
-            Log::info("Usuário com e-mail leonardocbalb@gmail.com não encontrado.");
+            Log::info('Usuário com e-mail leonardocbalb@gmail.com não encontrado.');
         }
 
         // Atribuir role 'admin' a outro usuário (exemplo)
-        $adminUser = \App\Models\User::where('email', 'admin@passeios.com')->first(); // Alterar para o e-mail do admin
+        $adminUser = User::where('email', 'admin@passeios.com')->first(); // Alterar para o e-mail do admin
         if ($adminUser) {
             $adminUser->assignRole('admin');
         } else {
             // Log para caso o usuário não seja encontrado
-            Log::info("Usuário com e-mail admin@passeios.com não encontrado.");
+            Log::info('Usuário com e-mail admin@passeios.com não encontrado.');
         }
     }
 }
