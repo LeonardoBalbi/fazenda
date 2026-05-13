@@ -18,6 +18,7 @@ class IngressoServicos extends Model
         'transportadoras_id',
         'nome',
         'cpf_cnpj',
+        'numero_cadastro_turismo',
         'motivo_visita',
         'local_partida',
         'destino',
@@ -31,6 +32,7 @@ class IngressoServicos extends Model
         'data_saida',
         'hora_saida',
         'observacao',
+        'lista_passageiros',
         'comprovante',
     ];
 
@@ -42,5 +44,22 @@ class IngressoServicos extends Model
     public function transportadora()
     {
         return $this->belongsTo(Transportadoras::class, 'transportadoras_id');
+    }
+
+    public function alteradoPor()
+    {
+        return $this->belongsTo(User::class, 'alterado_por');
+    }
+
+    public function user()
+    {
+        return $this->belongsTo(User::class);
+    }
+
+    public function getListaPassageirosSanitizedAttribute(): string
+    {
+        $raw = $this->attributes['lista_passageiros'] ?? '';
+
+        return html_entity_decode(strip_tags((string) $raw), ENT_QUOTES, 'UTF-8');
     }
 }
