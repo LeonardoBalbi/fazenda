@@ -35,7 +35,7 @@ class PasseiosTuristicos extends Model
 
     protected $casts = [
         'data_chegada' => 'date',
-        'data_saida'   => 'date',
+        'data_saida' => 'date',
     ];
 
     public function transportadora()
@@ -53,45 +53,50 @@ class PasseiosTuristicos extends Model
         return $this->belongsTo(User::class, 'alterado_por');
     }
 
+    public function getListaPassageirosSanitizedAttribute(): string
+    {
+        return html_entity_decode(strip_tags((string) ($this->lista_passageiros ?? '')), ENT_QUOTES, 'UTF-8');
+    }
+
     public static function statusOptions(): array
     {
         return [
-            'aguardando'  => 'Aguardando',
-            'em análise'  => 'Em Análise',
-            'liberado'    => 'Liberado',
-            'recusado'    => 'Recusado',
+            'aguardando' => 'Aguardando',
+            'em análise' => 'Em Análise',
+            'liberado' => 'Liberado',
+            'recusado' => 'Recusado',
         ];
     }
 
     public static function motivoVisitaOptions(): array
     {
         return [
-            'turistico'    => 'Turístico',
-            'educacional'  => 'Educacional',
-            'religioso'    => 'Religioso',
+            'turistico' => 'Turístico',
+            'educacional' => 'Educacional',
+            'religioso' => 'Religioso',
             'profissional' => 'Profissional',
-            'outros'       => 'Outros',
+            'outros' => 'Outros',
         ];
     }
 
     public static function tipoVeiculoOptions(): array
     {
         return [
-            'onibus'       => 'Ônibus',
+            'onibus' => 'Ônibus',
             'micro_onibus' => 'Micro-ônibus',
-            'van'          => 'Van',
-            'carro'        => 'Carro',
+            'van' => 'Van',
+            'carro' => 'Carro',
         ];
     }
 
     public static function destinoOptions(): array
     {
         return [
-            'jacareí'     => 'Conceição de Jacareí',
-            'itacuruca'   => 'Itacuruça',
+            'jacareí' => 'Conceição de Jacareí',
+            'itacuruca' => 'Itacuruça',
             'mangaratiba' => 'Mangaratiba',
-            'muriqui'     => 'Muriqui',
-            'praia_Grande'=> 'Praia Grande',
+            'muriqui' => 'Muriqui',
+            'praia_Grande' => 'Praia Grande',
         ];
     }
 }

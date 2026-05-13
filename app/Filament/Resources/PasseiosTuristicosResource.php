@@ -4,18 +4,19 @@ namespace App\Filament\Resources;
 
 use App\Filament\Resources\PasseiosTuristicosResource\Pages;
 use App\Models\PasseiosTuristicos;
-use App\Models\Organizadores;
-use App\Models\Transportadoras;
+use App\Support\SeloTurismo;
 use Filament\Forms;
+use Filament\Forms\Components\Grid;
+use Filament\Forms\Components\Section;
 use Filament\Forms\Form;
+use Filament\Notifications\Notification;
 use Filament\Resources\Resource;
 use Filament\Tables;
-use Filament\Tables\Table;
-use Filament\Forms\Components\Section;
-use Filament\Forms\Components\Grid;
-use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Filters\Filter;
+use Filament\Tables\Filters\SelectFilter;
+use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Support\Collection;
 
 class PasseiosTuristicosResource extends Resource
 {
@@ -203,25 +204,25 @@ class PasseiosTuristicosResource extends Resource
                     ->label('Status')
                     ->colors([
                         'warning' => 'aguardando',
-                        'info'    => 'em análise',
+                        'info' => 'em análise',
                         'success' => 'liberado',
-                        'danger'  => 'recusado',
+                        'danger' => 'recusado',
                     ])
                     ->formatStateUsing(fn (string $state): string => match (strtolower($state)) {
-                        'aguardando'  => 'AGUARDANDO',
+                        'aguardando' => 'AGUARDANDO',
                         'em análise', 'em analise' => 'EM ANÁLISE',
-                        'liberado'    => 'LIBERADO',
-                        'recusado'    => 'RECUSADO',
-                        default       => strtoupper($state),
+                        'liberado' => 'LIBERADO',
+                        'recusado' => 'RECUSADO',
+                        default => strtoupper($state),
                     }),
 
                 Tables\Columns\TextColumn::make('tipo_veiculo')
                     ->label('Tipo Veículo')
                     ->formatStateUsing(fn (?string $state): string => match ($state) {
-                        'onibus'       => 'ônibus',
+                        'onibus' => 'ônibus',
                         'micro_onibus' => 'micro_ônibus',
-                        'van'          => 'van',
-                        default        => $state ?? '—',
+                        'van' => 'van',
+                        default => $state ?? '—',
                     }),
 
                 Tables\Columns\TextColumn::make('placa_veiculo')
@@ -244,12 +245,12 @@ class PasseiosTuristicosResource extends Resource
                 Tables\Columns\TextColumn::make('destino')
                     ->label('Destino')
                     ->formatStateUsing(fn (?string $state): string => match ($state) {
-                        'jacareí'     => 'Conceição de Jacareí',
-                        'itacuruca'   => 'Itacuruça',
+                        'jacareí' => 'Conceição de Jacareí',
+                        'itacuruca' => 'Itacuruça',
                         'mangaratiba' => 'Mangaratiba',
-                        'muriqui'     => 'Muriqui',
-                        'praia_Grande'=> 'Praia Grande',
-                        default       => ucfirst($state ?? '—'),
+                        'muriqui' => 'Muriqui',
+                        'praia_Grande' => 'Praia Grande',
+                        default => ucfirst($state ?? '—'),
                     })
                     ->toggleable(isToggledHiddenByDefault: true),
 
@@ -303,7 +304,7 @@ class PasseiosTuristicosResource extends Resource
                     ->requiresConfirmation()
                     ->action(function (PasseiosTuristicos $record): void {
                         $record->update([
-                            'status'      => 'liberado',
+                            'status' => 'liberado',
                             'alterado_por' => auth()->id(),
                         ]);
                     })
@@ -311,6 +312,40 @@ class PasseiosTuristicosResource extends Resource
             ])
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([
+                    Tables\Actions\BulkAction::make('emitir_selos_impressao')
+                        ->label('Emitir selo (impressão)')
+                        ->icon('heroicon-o-printer')
+                        ->color('info')
+                        ->requiresConfirmation()
+                        ->modalHeading('Emitir selos para impressão')
+                        ->modalDescription('Será aberta uma página com o layout do selo para cada passeio selecionado que esteja com status Liberado. Use Ctrl+P para imprimir.')
+                        ->action(function (Collection $records) {
+                            $liberados = $records->filter(
+                                fn (PasseiosTuristicos $r): bool => SeloTurismo::isLiberado($r->status)
+                            );
+
+                            if ($liberados->isEmpty()) {
+                                Notification::make()
+                                    ->title('Nenhum passeio liberado')
+                                    ->danger()
+                                    ->body('Selecione pelo menos um registo com status Liberado.')
+                                    ->send();
+
+                                return;
+                            }
+
+                            if ($liberados->count() !== $records->count()) {
+                                Notification::make()
+                                    ->title('Aviso')
+                                    ->warning()
+                                    ->body('Só entram na impressão os passeios com status Liberado ('.$liberados->count().' de '.$records->count().').')
+                                    ->send();
+                            }
+
+                            $ids = $liberados->pluck('id')->sort()->values()->implode(',');
+
+                            return redirect()->route('passeios.selos.impressao', ['ids' => $ids]);
+                        }),
                     Tables\Actions\DeleteBulkAction::make(),
                     Tables\Actions\BulkAction::make('liberar_selecionados')
                         ->label('Liberar Selecionados')
@@ -319,7 +354,7 @@ class PasseiosTuristicosResource extends Resource
                         ->requiresConfirmation()
                         ->action(function ($records): void {
                             $records->each(fn ($r) => $r->update([
-                                'status'      => 'liberado',
+                                'status' => 'liberado',
                                 'alterado_por' => auth()->id(),
                             ]));
                         }),
@@ -337,10 +372,10 @@ class PasseiosTuristicosResource extends Resource
     public static function getPages(): array
     {
         return [
-            'index'  => Pages\ListPasseiosTuristicos::route('/'),
+            'index' => Pages\ListPasseiosTuristicos::route('/'),
             'create' => Pages\CreatePasseiosTuristicos::route('/create'),
-            'view'   => Pages\ViewPasseiosTuristicos::route('/{record}'),
-            'edit'   => Pages\EditPasseiosTuristicos::route('/{record}/edit'),
+            'view' => Pages\ViewPasseiosTuristicos::route('/{record}'),
+            'edit' => Pages\EditPasseiosTuristicos::route('/{record}/edit'),
         ];
     }
 }
