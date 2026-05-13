@@ -3,6 +3,7 @@
 namespace App\Filament\Resources;
 
 use App\Filament\Resources\RoleResource\Pages;
+use App\Models\User;
 use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Resources\Resource;
@@ -28,7 +29,7 @@ class RoleResource extends Resource
 
     public static function canViewAny(): bool
     {
-        return auth()->user()?->hasRole('super_admin') ?? false;
+        return auth()->user()?->hasAnyRole(User::filamentAdministrationRoles()) ?? false;
     }
 
     public static function canCreate(): bool
@@ -47,7 +48,7 @@ class RoleResource extends Resource
             return false;
         }
 
-        return $record->name !== 'super_admin';
+        return ! in_array($record->name, ['super_admin', 'super-admin'], true);
     }
 
     public static function form(Form $form): Form

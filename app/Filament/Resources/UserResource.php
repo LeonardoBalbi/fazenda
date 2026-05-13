@@ -29,7 +29,7 @@ class UserResource extends Resource
 
     public static function canViewAny(): bool
     {
-        return auth()->user()?->hasRole('super_admin') ?? false;
+        return auth()->user()?->hasAnyRole(User::filamentAdministrationRoles()) ?? false;
     }
 
     public static function canCreate(): bool

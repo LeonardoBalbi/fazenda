@@ -16,6 +16,33 @@ class User extends Authenticatable implements FilamentUser
     use HasFactory, HasRoles, Notifiable;
 
     /**
+     * Papéis que podem aceder ao painel Filament (inclui nomes do dump SQL legado).
+     *
+     * @return list<string>
+     */
+    public static function filamentPanelRoles(): array
+    {
+        return [
+            'super_admin',
+            'super-admin',
+            'admin',
+        ];
+    }
+
+    /**
+     * Papéis que podem gerir Utilizadores / Papéis no Filament.
+     *
+     * @return list<string>
+     */
+    public static function filamentAdministrationRoles(): array
+    {
+        return [
+            'super_admin',
+            'super-admin',
+        ];
+    }
+
+    /**
      * The attributes that are mass assignable.
      *
      * @var array<int, string>
@@ -52,7 +79,7 @@ class User extends Authenticatable implements FilamentUser
 
     public function canAccessPanel(Panel $panel): bool
     {
-        return $this->hasAnyRole(['super_admin', 'admin']);
+        return $this->hasAnyRole(static::filamentPanelRoles());
     }
 
     public function organizador(): BelongsTo
