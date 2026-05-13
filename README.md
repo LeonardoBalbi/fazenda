@@ -32,6 +32,15 @@ php artisan migrate --path=database/migrations/2026_05_13_150000_add_numero_cada
 
 Existe um comando Artisan para importar dumps; consulte `php artisan list` e o ficheiro `app/Console/Commands/ImportSqlDumpCommand.php`.
 
+### Importação de SQL (opcional) usando caminho relativo do arquivo
+D:\fazenda\fazendaroot_tur_pmm (1).sql"
+
+### Importação de SQL (opcional) usando caminho relativo local
+php artisan db:import "D:\fazenda\fazendaroot_tur_pmm (1).sql"
+
+### Importação de SQL (opcional) usando caminho relativo do arquivo intranet
+php artisan db:import "fazendaroot_tur_pmm (1).sql"
+
 ## Painel administrativo
 
 - URL típica: `/admin` (login Filament).
